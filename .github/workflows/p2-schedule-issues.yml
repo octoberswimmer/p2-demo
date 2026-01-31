@@ -1,0 +1,34 @@
+name: Schedule Issues
+
+on:
+  issues:
+    types: [opened, edited, closed, reopened, assigned, unassigned, labeled, unlabeled]
+  schedule:
+    - cron: '0 6 * * *'  # Run daily at 6am UTC
+  workflow_dispatch:
+    inputs:
+      github-url:
+        description: 'GitHub URL to schedule (issue, repo, or project URL)'
+        required: false
+        type: string
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: p2-schedule-${{ github.repository }}
+  # cancel-in-progress causes noisy "Run cancelled" notifications
+  # https://github.com/orgs/community/discussions/13015
+  cancel-in-progress: true
+
+jobs:
+  schedule:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Schedule project
+        uses: octoberswimmer/p2-github-scheduler@main
+        with:
+          token-broker-url: https://penny-pusher.octoberswimmer.com/token
+          github-url: ${{ inputs.github-url }}
+          # timezone: America/Chicago  # Uncomment and set your timezone
